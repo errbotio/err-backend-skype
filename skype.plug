@@ -1,0 +1,6 @@
+[Core]
+Name = Skype
+Module = skype
+
+[Documentation]
+Description = This is the Skype backend for Err.
