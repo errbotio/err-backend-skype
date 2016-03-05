@@ -131,7 +131,7 @@ class SkypeChatroom(object):
         Leave the room.
 
         :param reason:
-            An optional string explaining the reason for leaving the room.
+            Parameter ignored but present for compatibility to the generic API.
         """
         self._chat.Leave()
 
@@ -160,7 +160,7 @@ class SkypeChatroom(object):
 
     @property
     def joined(self):
-        u"""
+        """
         Boolean indicating whether this room has already been joined.
 
         :getter:
@@ -180,17 +180,17 @@ class SkypeChatroom(object):
 
     @topic.setter
     def topic(self, topic):
-        u"""
+        """
         Set the room's topic.
 
         :param topic:
             The topic to set.
         """
-        self.chat._Topic = topic
+        self._chat.Topic = topic
 
     @property
     def occupants(self):
-        u"""
+        """
         The room's occupants.
 
         :getter:
@@ -241,7 +241,6 @@ class SkypeBackend(ErrBot):
         """
         Event handler for chat messages.
         """
-        # if skype_msg.Status == 'RECEIVED' and skype_msg.Type == 'SAID':
         if skype_msg.Status == 'RECEIVED':
             log.debug("Processing message with status %s and type %s", skype_msg.Status, skype_msg.Type)
             msg = self._make_message(skype_msg)
