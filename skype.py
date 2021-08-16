@@ -2,12 +2,12 @@ import logging
 import sys
 import time
 
-from errbot.backends.base import Identifier, Message, ONLINE, RoomDoesNotExistError
+from errbot.backends.base import ONLINE, Identifier, Message, RoomDoesNotExistError
 from errbot.errBot import ErrBot
 from errbot.rendering import text
 
 # Can't use __name__ because of Yapsy
-log = logging.getLogger('errbot.backends.skype')
+log = logging.getLogger("errbot.backends.skype")
 
 try:
     from functools import lru_cache
@@ -74,6 +74,7 @@ class SkypeChatroomOccupant(SkypeUser):
     """
     This represents a user inside a groupchat on Skype.
     """
+
     def __init__(self, user, room, bot):
         """
         :param chat:
@@ -98,6 +99,7 @@ class SkypeChatroom(object):
     .. note::
         Creating new groupchats is unsupported.
     """
+
     def __init__(self, chat, bot):
         """
         :param chat:
@@ -198,8 +200,10 @@ class SkypeChatroom(object):
         :raises:
             :class:`~MUCNotJoinedError` if the room has not yet been joined.
         """
-        return [SkypeChatroomOccupant(user=member, room=self, bot=self._bot)
-                for member in self._chat.Members]
+        return [
+            SkypeChatroomOccupant(user=member, room=self, bot=self._bot)
+            for member in self._chat.Members
+        ]
 
     def invite(self, *args):
         """
@@ -215,10 +219,14 @@ class SkypeChatroom(object):
 class SkypeBackend(ErrBot):
     def __init__(self, config):
         super(SkypeBackend, self).__init__(config)
-        self.bot_config.SKYPE_ACCEPT_CONTACT_REQUESTS = getattr(config, 'SKYPE_ACCEPT_CONTACT_REQUESTS', True)
+        self.bot_config.SKYPE_ACCEPT_CONTACT_REQUESTS = getattr(
+            config, "SKYPE_ACCEPT_CONTACT_REQUESTS", True
+        )
         self.skype = Skype4Py.Skype()
         self.skype.OnMessageStatus = self._message_event_handler
-        self.skype.OnUserAuthorizationRequestReceived = self._contact_request_event_handler
+        self.skype.OnUserAuthorizationRequestReceived = (
+            self._contact_request_event_handler
+        )
         self.md_converter = text()
 
     def serve_forever(self):
@@ -241,12 +249,20 @@ class SkypeBackend(ErrBot):
         """
         Event handler for chat messages.
         """
-        if skype_msg.Status == 'RECEIVED':
-            log.debug("Processing message with status %s and type %s", skype_msg.Status, skype_msg.Type)
+        if skype_msg.Status == "RECEIVED":
+            log.debug(
+                "Processing message with status %s and type %s",
+                skype_msg.Status,
+                skype_msg.Type,
+            )
             msg = self._make_message(skype_msg)
             self.callback_message(msg)
         else:
-            log.debug("Ignoring message with status %s and type %s", skype_msg.Status, skype_msg.Type)
+            log.debug(
+                "Ignoring message with status %s and type %s",
+                skype_msg.Status,
+                skype_msg.Type,
+            )
 
         try:
             skype_msg.MarkAsSeen()
@@ -270,7 +286,7 @@ class SkypeBackend(ErrBot):
             user.Handle,
             user.ReceivedAuthRequest,
         )
-        if self.bot_config.SKYPE_ACCEPT_CONTACT_REQUESTS :
+        if self.bot_config.SKYPE_ACCEPT_CONTACT_REQUESTS:
             log.info("Accepting buddylist request from %s", user.Handle)
             user.SetBuddyStatusPendingAuthorization()
         else:
@@ -319,16 +335,18 @@ class SkypeBackend(ErrBot):
         if mess.type == "chat":
             self.skype.SendMessage(mess.to.handle, body)
         else:
-            if hasattr(mess.to, 'room'):
+            if hasattr(mess.to, "room"):
                 mess.to.room.chat.SendMessage(body)
             else:
                 mess.to.chat.SendMessage(body)
 
-    def change_presence(self, status=ONLINE, message=''):
+    def change_presence(self, status=ONLINE, message=""):
         super(SkypeBackend, self).change_presence(status=status, message=message)
 
     def prefix_groupchat_reply(self, message, identifier):
-        super(SkypeBackend, self).prefix_groupchat_reply(message=message, identifier=identifier)
+        super(SkypeBackend, self).prefix_groupchat_reply(
+            message=message, identifier=identifier
+        )
 
     @lru_cache(maxsize=None)
     def build_identifier(self, text_representation):
@@ -344,10 +362,15 @@ class SkypeBackend(ErrBot):
         except RoomDoesNotExistError:
             pass
 
-        matches = [u for u in self.skype.SearchForUsers(text_representation)
-                   if u.Handle == text_representation]
+        matches = [
+            u
+            for u in self.skype.SearchForUsers(text_representation)
+            if u.Handle == text_representation
+        ]
         if len(matches) == 1:
-            log.debug("Found a user in the Skype directory matching %s", text_representation)
+            log.debug(
+                "Found a user in the Skype directory matching %s", text_representation
+            )
             return SkypeUser(matches[0], bot=self)
 
         raise ValueError(
@@ -385,4 +408,4 @@ class SkypeBackend(ErrBot):
 
     @property
     def mode(self):
-        return 'skype'
+        return "skype"
